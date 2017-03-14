@@ -1,22 +1,22 @@
 from gmplot import gmplot
 
-def google_plot(lats, lons, clats, clons, cclats = None, cclons = None, online=False, filename='map.html'):
+def google_plot(lats, lons, clats=None, clons=None, cclats = None, cclons = None, online=False, filename='map.html'):
 
     # Latitudes, longitudes, Center latitudes, Center longitudes
     gmap = gmplot.GoogleMapPlotter(18.5162511, 73.8352121, 13)
 
-    gmap.scatter(lats, lons, 'blue', size=7, marker=False)
+    gmap.scatter(lats, lons, 'blue', size=10, marker=False)
     if(clats != None and clons != None):
-        gmap.scatter(clats, clons, 'orange', size=12, marker=False)
+        gmap.scatter(clats, clons, 'red', size=12, marker=False)
     if(cclats != None and cclons != None):
-        gmap.scatter(clats, clons, 'maroon', size=7, marker=False)
+        gmap.scatter(cclats, cclons, 'maroon', size=7, marker=True)
 
     import webbrowser
     url = filename
     new = 2
     gmap.draw(url)
     print "Drew map"
-    webbrowser.open(url, new=new)
+    # webbrowser.open(url, new=new)
 
 def draw_chart(lat, lon, sig = None, clat = None, clon = None):
     from matplotlib import pyplot as plt

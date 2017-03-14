@@ -1,38 +1,31 @@
-from clustering.cluster import cluster
-from functions.basicfunctions import get_all_signal_points_arrays, combine_separate_latlon
-from functions.computationalfunctions import get_3_tuple
-from functions.datafunctions import get_data, get_tower_locations
+import time
+
+import functions.computationalfunctions
+from functions.basicfunctions import get_all_signal_points_arrays, combine_separate_latlon, arffFile
+from functions.datafunctions import get_data, getCentres
 from graphs.plotting import google_plot
-from trilateration.trilateration import trilaterate
 
 
 
 
-def signal_main(provider, starttime, endtime, offline):
-    lst, matrix, labels = get_data(provider, starttime, endtime, offline)
+def signal_main(provider, starttime, endtime, offline, getcentres=False, createFile=False, plot=False):
+    start_time = time.time()
+    lst, matrix, labels, cclat, cclon = get_data(provider, starttime, endtime, offline)
+    print "Data Fetch Time elapsed: {:.2f}s".format(time.time() - start_time)
 
-    # cnt = eliminate_outliers(matrix, labels)
-    # print (str(cnt) + " points eliminated as outliers.")
-    tuple3 = get_3_tuple(matrix, labels)
-    print "Returned " + str(len(tuple3)) + " tuples"
+    start_time = time.time()
 
-    xcents, ycents, count = get_tower_locations(tuple3)
+    xcents, ycents, count = functions.computationalfunctions.get_tower_locations(matrix, labels, lateration='tri')
     print "Retrieved " + str(count) + " trilaterated towers"
+    print "Computation Time elapsed: {:.2f}s".format(time.time() - start_time)
+    # cclat = None
+    # cclon = None
+    if(getcentres):
+        cclat, cclon = getCentres(provider, starttime, endtime)
 
-    f1 = open("./trilat_towers.txt", "w+")
-    f1.write(str(xcents) + "\n\n\n\n" +  str(ycents))
-    print "Done writing to file"
-    f1.close()
+    if (createFile):
+        arffFile(xcents, ycents, provider, starttime, endtime)
+    if plot:
+        xtows, ytows, labels = get_all_signal_points_arrays(matrix)
+        google_plot(xtows, ytows, xcents, ycents, cclat, cclon)
 
-    # clust_matrix = combine_separate_latlon(xcents, ycents)
-
-
-
-    # clust_centres = cluster(clust_matrix)
-
-
-    xtows, ytows, labels = get_all_signal_points_arrays(matrix)
-
-    # draw_chart(xcents, ycents)
-    # show_on_map(xtows, ytows, labels, "", xcents, ycents)
-    google_plot(xtows, ytows, xcents, ycents)

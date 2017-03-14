@@ -1,13 +1,13 @@
 ## Used in Trilateration
-max_signal = -40
-signal_factor = 1.2
+max_signal = -45
+signal_factor = 8.5
 division_factor = 1000
-max_range = 400
+max_range = 500
 
-## Point selection variables
+## Point sstelection variables
 #50, 200 is optimal
 tup_min_dist = 75
-tup_max_dist = 170
+tup_max_dist = 300
 outlier_check_dist = 10
 outlier_pct = 20
 
