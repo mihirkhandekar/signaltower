@@ -3,16 +3,18 @@ from global_variables import tup_min_dist, tup_max_dist
 from trilatdir.trilateration import trilaterate
 
 def check_2_points(loc1, loc2):
-    if tup_min_dist < measure(loc1[0], loc1[1], loc2[0], loc2[1]) < tup_max_dist:
-                return True
-    return False
+    return (
+        tup_min_dist
+        < measure(loc1[0], loc1[1], loc2[0], loc2[1])
+        < tup_max_dist
+    )
 
 def get_tower_locations_trilaterate(matrix, labels):
     count = 0
     xcents = []
     ycents = []
 
-    for i in range(0, len(matrix) - 2):
+    for i in range(len(matrix) - 2):
         for j in range(i + 1, len(matrix) - 1):
             if (check_2_points(matrix[i], matrix[j])):
                 for k in range(j + 1, len(matrix)):
@@ -35,11 +37,9 @@ def get_tower_locations_multilaterate(matrix, labels):
     count = 0
     i = 0
     tuplist = []
-    for i in range(0, len(matrix)):
-        for j in range(i + 1, len(matrix)):
-
+    for i in range(len(matrix)):
+        for _ in range(i + 1, len(matrix)):
             tuplist.append()
-    pass
 
 
 def get_tower_locations(matrix, labels, lateration='tri'):

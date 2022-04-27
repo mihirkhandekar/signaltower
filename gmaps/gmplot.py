@@ -36,7 +36,7 @@ class GoogleMapPlotter(object):
         return cls(lat, lng, zoom)
 
     @classmethod
-    def geocode(self, location_string):
+    def geocode(cls, location_string):
         geocode = requests.get(
             'http://maps.googleapis.com/maps/api/geocode/json?address="%s"' % location_string)
         geocode = json.loads(geocode.text)
@@ -75,11 +75,12 @@ class GoogleMapPlotter(object):
         self.shapes.append((path, settings))
 
     def _process_kwargs(self, kwargs):
-        settings = dict()
-        settings["edge_color"] = kwargs.get("color", None) or \
-                                 kwargs.get("edge_color", None) or \
-                                 kwargs.get("ec", None) or \
-                                 "#000000"
+        settings = {
+            "edge_color": kwargs.get("color", None)
+            or kwargs.get("edge_color", None)
+            or kwargs.get("ec", None)
+            or "#000000"
+        }
 
         settings["edge_alpha"] = kwargs.get("alpha", None) or \
                                  kwargs.get("edge_alpha", None) or \
@@ -128,17 +129,17 @@ class GoogleMapPlotter(object):
         :param radius: The hardest param. Example (string):
         :return:
         """
-        settings = {}
-        settings['threshold'] = threshold
-        settings['radius'] = radius
-        settings['gradient'] = gradient
-        settings['opacity'] = opacity
-        settings['dissipating'] = dissipating
+        settings = {
+            'threshold': threshold,
+            'radius': radius,
+            'gradient': gradient,
+            'opacity': opacity,
+            'dissipating': dissipating,
+        }
+
         settings = self._process_heatmap_kwargs(settings)
 
-        heatmap_points = []
-        for lat, lng in zip(lats, lngs):
-            heatmap_points.append((lat, lng))
+        heatmap_points = list(zip(lats, lngs))
         self.heatmap_points.append((heatmap_points, settings))
 
     def _process_heatmap_kwargs(self, settings_dict):
@@ -150,8 +151,7 @@ class GoogleMapPlotter(object):
         dissipation_string = 'true' if settings_dict['dissipating'] else 'false'
         settings_string += "heatmap.set('dissipating', %s);\n" % (dissipation_string)
 
-        gradient = settings_dict['gradient']
-        if gradient:
+        if gradient := settings_dict['gradient']:
             gradient_string = "var gradient = [\n"
             for r, g, b, a in gradient:
                 gradient_string += "\t" + "'rgba(%d, %d, %d, %d)',\n" % (r, g, b, a)
@@ -173,8 +173,7 @@ class GoogleMapPlotter(object):
     # paths
 
     def draw_to_string(self):
-        strg = ""
-        strg += ('<html>\n')
+        strg = "" + '<html>\n'
         strg += ('<head>\n')
         strg += (
             '<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />\n')
@@ -232,22 +231,27 @@ class GoogleMapPlotter(object):
         slat = self.gridsetting[0]
         elat = self.gridsetting[1]
         latin = self.gridsetting[2]
+        r = [slat + float(x) * latin for x in range(int((elat - slat) / latin))]
         slng = self.gridsetting[3]
         elng = self.gridsetting[4]
         lngin = self.gridsetting[5]
-        self.grids = []
+        self.grids = [
+            [
+                (lat + latin / 2.0, slng + lngin / 2.0),
+                (lat + latin / 2.0, elng + lngin / 2.0),
+            ]
+            for lat in r
+        ]
 
-        r = [
-            slat + float(x) * latin for x in range(0, int((elat - slat) / latin))]
-        for lat in r:
-            self.grids.append(
-                [(lat + latin / 2.0, slng + lngin / 2.0), (lat + latin / 2.0, elng + lngin / 2.0)])
+        r = [slng + float(x) * lngin for x in range(int((elng - slng) / lngin))]
+        self.grids.extend(
+            [
+                (slat + latin / 2.0, lng + lngin / 2.0),
+                (elat + latin / 2.0, lng + lngin / 2.0),
+            ]
+            for lng in r
+        )
 
-        r = [
-            slng + float(x) * lngin for x in range(0, int((elng - slng) / lngin))]
-        for lng in r:
-            self.grids.append(
-                [(slat + latin / 2.0, lng + lngin / 2.0), (elat + latin / 2.0, lng + lngin / 2.0)])
         strg = ""
         for line in self.grids:
             settings = self._process_kwargs({"color": "#000000"})
@@ -255,10 +259,10 @@ class GoogleMapPlotter(object):
         return strg
 
     def write_points_str(self):
-        strg = ""
-        for point in self.points:
-            strg += self.write_point_str(point[0], point[1], point[2], point[3])
-        return strg
+        return "".join(
+            self.write_point_str(point[0], point[1], point[2], point[3])
+            for point in self.points
+        )
 
     def get_cycle(self, lat, lng, rad):
         # unit of radius: meter
@@ -280,16 +284,16 @@ class GoogleMapPlotter(object):
         return cycle
 
     def write_paths_str(self):
-        strg = ""
-        for path, settings in self.paths:
-            strg += self.write_polyline_str(path, settings)
-        return strg
+        return "".join(
+            self.write_polyline_str(path, settings)
+            for path, settings in self.paths
+        )
 
     def write_shapes_str(self):
-        strg = ""
-        for shape, settings in self.shapes:
-            strg += self.write_polygon_str(shape, settings)
-        return strg
+        return "".join(
+            self.write_polygon_str(shape, settings)
+            for shape, settings in self.shapes
+        )
 
     # TODO: Add support for mapTypeId: google.maps.MapTypeId.SATELLITE
     def write_map_str(self):
@@ -322,14 +326,13 @@ class GoogleMapPlotter(object):
         return strg
 
     def write_polyline_str(self, path, settings):
-        strg = ""
         clickable = False
         geodesic = True
         strokeColor = settings.get('color') or settings.get('edge_color')
         strokeOpacity = settings.get('edge_alpha')
         strokeWeight = settings.get('edge_width')
 
-        strg +=('var PolylineCoordinates = [\n')
+        strg = "" + 'var PolylineCoordinates = [\n'
         for coordinate in path:
             strg +=('new google.maps.LatLng(%f, %f),\n' %
                     (coordinate[0], coordinate[1]))
@@ -350,7 +353,6 @@ class GoogleMapPlotter(object):
         return strg
 
     def write_polygon_str(self, path, settings):
-        strg = ""
         clickable = False
         geodesic = True
         strokeColor = settings.get('edge_color') or settings.get('color')
@@ -358,7 +360,7 @@ class GoogleMapPlotter(object):
         strokeWeight = settings.get('edge_width')
         fillColor = settings.get('face_color') or settings.get('color')
         fillOpacity= settings.get('face_alpha')
-        strg +=('var coords = [\n')
+        strg = "" + 'var coords = [\n'
         for coordinate in path:
             strg += ('new google.maps.LatLng(%f, %f),\n' %
                     (coordinate[0], coordinate[1]))
@@ -402,37 +404,36 @@ class GoogleMapPlotter(object):
     # create the html file which include one google map and all points and
     # paths
     def draw(self, htmlfile):
-        f = open(htmlfile, 'w')
-        f.write('<html>\n')
-        f.write('<head>\n')
-        f.write(
-            '<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />\n')
-        f.write(
-            '<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>\n')
-        f.write('<title>Google Maps - pygmaps </title>\n')
-        f.write(
-            '<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key='+apikey+'&libraries=visualization&sensor=true_or_false"></script>\n')
-        f.write('<script type="text/javascript">\n')
-        f.write('\tfunction initialize() {\n')
-        self.write_map(f)
-        self.write_grids(f)
-        self.write_points(f)
-        self.write_paths(f)
-        self.write_shapes(f)
-        self.write_heatmap(f)
-        # f.write("$('#map_canvas').on('shown', function () { google.maps.event.trigger(map, 'resize'); map.setCenter(new google.maps.LatLng(42.3605336, -72.6362989)); })")
-        f.write("  google.maps.event.addListenerOnce(map, 'tilesloaded', function() {      google.maps.event.addListenerOnce(map, 'tilesloaded', function() {           google.maps.event.trigger(map, 'resize');       }); });  ")
-        f.write('\t}\n')
-        f.write('</script>\n')
-        # f.write('<div class="alert">   <span class="closebtn" onclick="this.parentElement.style.display=\'none\';">&times;</span>    <strong>Note</strong><br> BLUE: Estimated tower locations<br>GREEN: User\'s location history</div> ')
-        f.write('</head>\n')
-        f.write(
-            '<body style="margin:0px; padding:0px;" onload="initialize()">\n')
-        f.write(
-            '\t<div id="map_canvas" style="width: 100%; height: 100%;"></div>\n')
-        f.write('</body>\n')
-        f.write('</html>\n')
-        f.close()
+        with open(htmlfile, 'w') as f:
+            f.write('<html>\n')
+            f.write('<head>\n')
+            f.write(
+                '<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />\n')
+            f.write(
+                '<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>\n')
+            f.write('<title>Google Maps - pygmaps </title>\n')
+            f.write(
+                '<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key='+apikey+'&libraries=visualization&sensor=true_or_false"></script>\n')
+            f.write('<script type="text/javascript">\n')
+            f.write('\tfunction initialize() {\n')
+            self.write_map(f)
+            self.write_grids(f)
+            self.write_points(f)
+            self.write_paths(f)
+            self.write_shapes(f)
+            self.write_heatmap(f)
+            # f.write("$('#map_canvas').on('shown', function () { google.maps.event.trigger(map, 'resize'); map.setCenter(new google.maps.LatLng(42.3605336, -72.6362989)); })")
+            f.write("  google.maps.event.addListenerOnce(map, 'tilesloaded', function() {      google.maps.event.addListenerOnce(map, 'tilesloaded', function() {           google.maps.event.trigger(map, 'resize');       }); });  ")
+            f.write('\t}\n')
+            f.write('</script>\n')
+            # f.write('<div class="alert">   <span class="closebtn" onclick="this.parentElement.style.display=\'none\';">&times;</span>    <strong>Note</strong><br> BLUE: Estimated tower locations<br>GREEN: User\'s location history</div> ')
+            f.write('</head>\n')
+            f.write(
+                '<body style="margin:0px; padding:0px;" onload="initialize()">\n')
+            f.write(
+                '\t<div id="map_canvas" style="width: 100%; height: 100%;"></div>\n')
+            f.write('</body>\n')
+            f.write('</html>\n')
 
     #############################################
     # # # # # # Low level Map Drawing # # # # # #
@@ -444,22 +445,26 @@ class GoogleMapPlotter(object):
         slat = self.gridsetting[0]
         elat = self.gridsetting[1]
         latin = self.gridsetting[2]
+        r = [slat + float(x) * latin for x in range(int((elat - slat) / latin))]
         slng = self.gridsetting[3]
         elng = self.gridsetting[4]
         lngin = self.gridsetting[5]
-        self.grids = []
+        self.grids = [
+            [
+                (lat + latin / 2.0, slng + lngin / 2.0),
+                (lat + latin / 2.0, elng + lngin / 2.0),
+            ]
+            for lat in r
+        ]
 
-        r = [
-            slat + float(x) * latin for x in range(0, int((elat - slat) / latin))]
-        for lat in r:
-            self.grids.append(
-                [(lat + latin / 2.0, slng + lngin / 2.0), (lat + latin / 2.0, elng + lngin / 2.0)])
-
-        r = [
-            slng + float(x) * lngin for x in range(0, int((elng - slng) / lngin))]
-        for lng in r:
-            self.grids.append(
-                [(slat + latin / 2.0, lng + lngin / 2.0), (elat + latin / 2.0, lng + lngin / 2.0)])
+        r = [slng + float(x) * lngin for x in range(int((elng - slng) / lngin))]
+        self.grids.extend(
+            [
+                (slat + latin / 2.0, lng + lngin / 2.0),
+                (elat + latin / 2.0, lng + lngin / 2.0),
+            ]
+            for lng in r
+        )
 
         for line in self.grids:
             settings = self._process_kwargs({"color": "#000000"})

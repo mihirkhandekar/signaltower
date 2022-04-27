@@ -18,9 +18,7 @@ def get_all_signal_points_arrays(matrix):
     for row in matrix:
         xtows.append(row[0])
         ytows.append(row[1])
-    for lab in labels:
-        labels.append(lab)
-
+    labels.extend(iter(labels))
     return xtows, ytows, labels
 
 def combine_separate_latlon(xcents, ycents):
@@ -29,11 +27,8 @@ def combine_separate_latlon(xcents, ycents):
     ylen = len(ycents)
     if(xlen != ylen):
         return None
-    for i in range(0, xlen):
-        row_matrix = []
-        row_matrix.append(xcents[i])
-        row_matrix.append(ycents[i])
-
+    for i in range(xlen):
+        row_matrix = [xcents[i], ycents[i]]
         clust_matrix.append(row_matrix)
 
     return clust_matrix

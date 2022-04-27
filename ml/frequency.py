@@ -54,8 +54,7 @@ def measure(loc1, loc2):
 
 def find_set(loc, locations):
     radius = 500 #in m
-    loc_set = []
-    loc_set.append(loc)
+    loc_set = [loc]
     for location in locations:
         if measure(loc, location) < 100:
             loc_set.append(location)
@@ -63,11 +62,10 @@ def find_set(loc, locations):
 
 
 def determine(loc1, loc2):
-    if loc1.latitude == loc2.latitude:
-        if loc1.longitude == loc2.longitude:
-            return 1
-    else:
+    if loc1.latitude != loc2.latitude:
         return 0
+    if loc1.longitude == loc2.longitude:
+        return 1
 
 
 def get_freq(imei,top_n):
@@ -145,7 +143,8 @@ def get_freq(imei,top_n):
         lats.append(area.centre.latitude)
         lons.append(area.centre.longitude)'''
 
-    url = 'http://signalapps.herokuapp.com/frequentlocs?imei='+str(imei)+'&qty=' + str(top_n)
+    url = f'http://signalapps.herokuapp.com/frequentlocs?imei={str(imei)}&qty={str(top_n)}'
+
     response = urllib.urlopen(url)
     data = response.read()
 
