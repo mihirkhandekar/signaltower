@@ -33,18 +33,16 @@ def getImeiTrainList(imei, imeilist):
 def get_routes():
     (trainingdata, imeilist) = (functions.datafunctions.get_train_data())
     # pprint.pprint(trainingdata)
-    routesbyimei = dict()
+    routesbyimei = {}
     for key, value in trainingdata.items():
-        imei = key
         matrix = value
-        routeslist = []
-        routelist = []
         if len(matrix) < 1:
             continue
         startindex = 0
-        routelist.append([matrix[startindex][0], matrix[startindex][1], 0.0])
+        routelist = [[matrix[startindex][0], matrix[startindex][1], 0.0]]
         dist = min_dist + 1
-              #lat, lon, location
+        imei = key
+        routeslist = []
         for i in range(1, len(matrix) - 1):
             if i == startindex:
                 routelist.append([matrix[startindex][0], matrix[startindex][1], 0.0])
@@ -100,7 +98,6 @@ def get_routes():
 
 def getpopularlocs(imei):
     return ml.frequency.get_freq(imei, 4)
-    pass
 
 
 def route_by_sec(route):
@@ -217,9 +214,9 @@ def get_training_data(routesbyimei, ngram):
 
         poplat, poplon = getpopularlocs(imei)
 
-        lat = [0.0 for i in range(ngram)]
-        lon = [0.0 for i in range(ngram)]
-        time = [None for i in range(ngram)]
+        lat = [0.0 for _ in range(ngram)]
+        lon = [0.0 for _ in range(ngram)]
+        time = [None for _ in range(ngram)]
         for route in routes:
             if len(route) >= ngram + 1:
                 for i in range(len(route) - ngram):

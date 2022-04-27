@@ -76,10 +76,13 @@ def calc_distance(point):
 def geo2cart(lat,lon):
     lat=np.deg2rad(lat)
     lon=np.deg2rad(lon)
-    points=np.vstack((earth_radius*np.cos(lat)*np.cos(lon),
-           earth_radius*np.cos(lat)*np.sin(lon),
-           earth_radius*np.sin(lat))).T
-    return points
+    return np.vstack(
+        (
+            earth_radius * np.cos(lat) * np.cos(lon),
+            earth_radius * np.cos(lat) * np.sin(lon),
+            earth_radius * np.sin(lat),
+        )
+    ).T
 
 #Cartesian to lat/lon
 def cart2geo(xyz):
@@ -91,10 +94,7 @@ def cart2geo(xyz):
 #Minimization function.
 def minimize(point):
     dist= calc_distance(point)
-    #Here you can change the minimization parameter, here the distances
-    #from a sphere to a point is divided by its radius for linear weighting.
-    err=np.linalg.norm(dist/rad)
-    return err
+    return np.linalg.norm(dist/rad)
 
 def multilaterate(p):
 

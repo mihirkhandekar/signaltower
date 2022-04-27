@@ -19,7 +19,7 @@ def gen_locations(loccount=10, bottomleft=(18.491947, 73.798019), topright=(18.5
 
     loclats = []
     loclons = []
-    for i in range(loccount):
+    for _ in range(loccount):
         loclats.append(float(float(random.randrange(bottomleft[0] * (10 ** digits), topright[0] * (10 ** digits))) / float(10 ** digits)))
         loclons.append(float(float(random.randrange(bottomleft[1] * (10 ** digits), topright[1] * (10 ** digits))) / float(10 ** digits)))
 
@@ -31,7 +31,7 @@ def gen_locations(loccount=10, bottomleft=(18.491947, 73.798019), topright=(18.5
 def gen_measurements(tlats, tlons, llats, llons):
     from basicfunctions import measure
     signal = []
-    for i in range(0, min(len(llats), len(llons)), 1):
+    for i in range(min(len(llats), len(llons))):
         mindist = numpy.inf
         for j in range(min(len(tlats), len(tlons))):
             dist = measure(tlats[j], tlons[j], llats[i], llons[i])
@@ -48,7 +48,7 @@ def gen_measurements(tlats, tlons, llats, llons):
     newlon = []
     newsig = []
 
-    for i in range(0, slen):
+    for i in range(slen):
         if signal[i] != numpy.inf:
             newlat.append(llats[i])
             newlon.append(llons[i])

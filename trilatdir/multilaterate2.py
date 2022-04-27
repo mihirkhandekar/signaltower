@@ -131,7 +131,12 @@ def mlat_iter(rel_stations, prange_obs, xguess=[0, 0, 0], limit=20, maxrounds=10
         prange_est = [[numpy.linalg.norm(station - xguess)] for station in rel_stations]
         dphat = prange_obs - prange_est
         H = numpy.array(
-            [(numpy.array(-rel_stations[row, :]) + xguess) / prange_est[row] for row in range(0, len(rel_stations))])
+            [
+                (numpy.array(-rel_stations[row, :]) + xguess) / prange_est[row]
+                for row in range(len(rel_stations))
+            ]
+        )
+
         # now we have H, the Jacobian, and can solve for residual error
         xerr = numpy.linalg.lstsq(H, dphat)[0].flatten()
         xguess += xerr
@@ -139,7 +144,6 @@ def mlat_iter(rel_stations, prange_obs, xguess=[0, 0, 0], limit=20, maxrounds=10
         rounds += 1
         if rounds > maxrounds:
             raise Exception("Failed to converge!")
-            break
     return xguess
 
 

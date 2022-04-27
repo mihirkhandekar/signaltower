@@ -75,14 +75,14 @@ def ecef2llh((x, y, z)):
 def mul1(P, dists):
     R = 6378137  # Earth radius in meters
     A = []
-    for m in range(0, len(P)):
+    for m in range(len(P)):
         x = P[m][0]
         y = P[m][1]
         z = P[m][2]
         Am = -2 * x
         Bm = -2 * y
         Cm = -2 * z
-        Dm = R * R + (pow(x, 2) + pow(y, 2) + pow(z, 2)) - pow(dists[m], 2)
+        Dm = R**2 + (pow(x, 2) + pow(y, 2) + pow(z, 2)) - pow(dists[m], 2)
         A += [[Am, Bm, Cm, Dm]]
     # Solve using SVD
     A = numpy.array(A)
